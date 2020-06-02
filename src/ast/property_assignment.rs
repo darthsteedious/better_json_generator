@@ -1,13 +1,13 @@
-use super::{Expression, JsonValue, visitor::ExpressionVisitor};
+use super::{Expression, JsonValue, name::NameExpression, visitor::ExpressionVisitor};
 
 #[derive(Debug)]
 pub struct PropertyAssignmentExpression {
-    pub name: String,
-    pub value: JsonValue,
+    pub name: Box<dyn Expression>,
+    pub value: Box<dyn Expression>,
 }
 
 impl PropertyAssignmentExpression {
-    pub fn new(name: String, value: JsonValue) -> PropertyAssignmentExpression {
+    pub fn new(name: Box<dyn Expression>, value: Box<dyn Expression>) -> PropertyAssignmentExpression {
         PropertyAssignmentExpression { name, value }
     }
 }

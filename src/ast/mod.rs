@@ -1,6 +1,9 @@
 pub mod comma;
+pub mod json_array;
 pub mod json_object;
+pub mod name;
 pub mod property_assignment;
+pub mod value;
 pub mod visitor;
 pub mod whitespace;
 use visitor::ExpressionVisitor;
@@ -22,6 +25,9 @@ pub enum JsonValue {
 mod tests {
     use super::*;
     use super::visitor::{JsonExpressionVisitor, ExpressionVisitor};
+    use crate::parsing::ParseResult;
+    use crate::ast::name::NameExpression;
+    use crate::ast::value::ValueExpression;
 
     macro_rules! expr_theory {
         ($name:ident, $e:expr, $expected:literal) => {
@@ -36,8 +42,18 @@ mod tests {
         }
     }
 
+    fn new_name_expr(name: &str) -> NameExpression {
+        NameExpression::new(String::from(name))
+    }
+
+    fn new_value_expr(value: JsonValue) -> ValueExpression {
+        ValueExpression::new(value)
+    }
+
     fn new_prop_assignment(name: &str, value: JsonValue) -> property_assignment::PropertyAssignmentExpression {
-        property_assignment::PropertyAssignmentExpression::new(String::from(name), value)
+        property_assignment::PropertyAssignmentExpression::new(
+            Box::new(new_name_expr(name)),
+            Box::new(new_value_expr(value)))
     }
 
     expr_theory!(number_assignment, new_prop_assignment("foo", JsonValue::Number(1)),

@@ -1,4 +1,7 @@
-#[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+use std::ops::Deref;
+use crate::tokens::Token::Whitespace;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Token {
     OpenParenthesis,
     CloseParenthesis,
@@ -11,8 +14,23 @@ pub enum Token {
     Quote,
     Comma,
     Colon,
+    NegativeSign,
     Whitespace(char),
     Unknown(char),
+}
+
+impl Token {
+    pub fn newline() -> Self {
+        Token::Whitespace('\n')
+    }
+
+    pub fn space() -> Self {
+        Token::Whitespace(' ')
+    }
+
+    pub fn tab() -> Self {
+        Token::Whitespace('\t')
+    }
 }
 
 impl From<char> for Token {
@@ -31,12 +49,36 @@ impl From<char> for Token {
             ',' => Token::Comma,
             ':' => Token::Colon,
             '\"' => Token::Quote,
+            '-' => Token::NegativeSign,
             l @ 'a'..='z' => Token::Character(l),
             u @ 'A'..='Z' => Token::Character(u),
             c => Token::Unknown(c)
         }
     }
 }
+
+impl From<&Token> for char {
+    fn from(t: &Token) -> Self {
+        match t {
+            Token::OpenParenthesis => '(',
+            Token::CloseParenthesis => ')',
+            Token::OpenCurlyBrace => '{',
+            Token::CloseCurlyBrace => '}',
+            Token::OpenSquareBrace => '[',
+            Token::CloseSquareBrace => ']',
+            Token::Whitespace(ws) => *ws,
+            Token::Digit(d) => *d as char,
+            Token::Comma => ',',
+            Token::Colon => ':',
+            Token::Quote => '"',
+            Token::NegativeSign => '-',
+            Token::Character(c) => *c,
+            Token::Unknown(u) => *u
+        }
+    }
+}
+
+
 
 pub fn process_str(s: &str) -> Vec<Token> {
     s.chars().into_iter().fold(Vec::new(), |mut v, c| {
@@ -74,6 +116,7 @@ mod tests {
     create_test!(test_tab, '\t', Token::Whitespace('\t'));
     create_test!(test_colon, ':', Token::Colon);
     create_test!(test_comma, ',', Token::Comma);
+    create_test!(test_neg_sign, '-', Token::NegativeSign);
     create_test!(test_digit_0, '0', Token::Digit(0));
     create_test!(test_digit_1, '1', Token::Digit(1));
     create_test!(test_digit_2, '2', Token::Digit(2));
@@ -204,7 +247,7 @@ mod tests {
         Token::Quote,
         Token::CloseCurlyBrace);
 
-    process_str_theory!(complex_tag_theory, "{\"x\": \"{{foo(true, 123, \"hello\")}}\"}",
+    process_str_theory!(complex_tag_theory, "{\"x\": \"{{foo(true, -123, \"hello\")}}\"}",
         Token::OpenCurlyBrace,
         Token::Quote,
         Token::Character('x'),
@@ -224,6 +267,7 @@ mod tests {
         Token::Character('e'),
         Token::Comma,
         Token::Whitespace(' '),
+        Token::NegativeSign,
         Token::Digit(1),
         Token::Digit(2),
         Token::Digit(3),

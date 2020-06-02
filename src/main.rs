@@ -1,5 +1,6 @@
 mod ast;
 mod parsing;
+mod tags;
 mod tokens;
 
 use ast::{
@@ -7,15 +8,19 @@ use ast::{
     visitor::{ExpressionVisitor, JsonExpressionVisitor}};
 use parsing::parse;
 use tokens::process_str;
+use std::collections::VecDeque;
 
 fn main() {
-    let mut tokens = process_str("{\"foo\": 1230, \"bar\": true}");
+    let mut tokens = process_str("{\"foo\": \"bar\", \"baz\": -123, \"bing\": 5}");
+    let mut result = parse(tokens);
 
-    let mut result = parse(&mut tokens);
+    match result {
+        Ok(mut expr) => {
+            let  v = &mut JsonExpressionVisitor::new();
+            expr.accept(v);
 
-    let mut v = JsonExpressionVisitor::new();
-
-    result.accept(&mut v);
-
-    println!("{}", v.get_json());
+            println!("{}", v.get_json());
+        },
+        Err(e) => panic!("Error trying to parse tokens. {}", e)
+    }
 }
